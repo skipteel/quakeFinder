@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>quakeViewer</title>
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+    <link rel="stylesheet" href="/css/styles-zoom.css">
+  </head>
+  <body>
+    <svg id="defs">
+        <defs>
+            <linearGradient id="gradBlue" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#005C99;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#0099FF;stop-opacity:1" />
+            </linearGradient>
+            <filter id="glow">
+                <feColorMatrix type="matrix"
+                    values=
+                    "0 0 0 0   0
+                     0 0 0 0.9 0
+                     0 0 0 0.9 0
+                     0 0 0 1   0"/>
+                <feGaussianBlur stdDeviation="5.5" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+        </defs>
+    </svg>
+
+
+    <section id="quake-field">
+      <h3>Quakes!</h3>
+      <div id="options">
+        <div>
+          <label for="from">From</label>
+          <input type="text" id="from" name="from">
+        </div>
+        <div>
+          <label for="to">To</label>
+          <input type="text" id="to" name="to">
+        </div>
+        <div>
+          <label for="minmag">Minimum Magnitude</label>
+          <select type="text" id="minmag" name="minmag">
+            <!-- <option value="0">0</option>
+            <option value="1">1</option> -->
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+          </select>
+        </div>
+        <button type="button" id="dateButton">Submit</button><br/>
+        <button type="button" id="rotateToggleButton">Rotate the Globe</button>
+      </div>
+    </section>
+    <div id="daterange">
+      <h4></h4>
+    </div>
+
+    <div id="quake-info">
+      <h4></h4>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+    <script src='js/lib/d3.js'></script>
+    <script src='js/lib/d3_queue.js'></script>
+    <script src='js/lib/d3_topojson.js'></script>
+    <script src="/js/app.js" charset="utf-8"></script>
+  </body>
+</html>

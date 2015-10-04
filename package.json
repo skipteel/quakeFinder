@@ -1,0 +1,17 @@
+{
+  "name": "quakeview",
+  "version": "1.0.0",
+  "description": "An application that visualizes earthquake data",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Skip Teel",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.13.3",
+    "nodemon": "^1.7.1",
+    "tzwhere": "^1.0.0"
+  }
+}
