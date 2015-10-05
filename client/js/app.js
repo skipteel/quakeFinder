@@ -1,5 +1,8 @@
 console.log('scripts loaded');
 
+var width = 1500,
+    height = 800;
+
 var svg;
 var proj;
 var world;
@@ -7,13 +10,135 @@ var latitude;
 var longitude;
 var globe;
 
-var width = 1500,
-    height = 800;
+// --- Generating gradient for depth legend ---
 
+var gradientData = [
+  {
+    color: 'red',
+    label: '0m-70m',
+    label2: 'Shallow',
+    xPosition: '0'
+  },
+  {
+    color: 'yellow',
+    label: '70m-300m',
+    label2: 'Intermediate',
+    xPosition: '.25'
+  },
+  {
+    color: 'green',
+    label: '300m-700m',
+    label2: 'Deep',
+    xPosition: '.75'
+  },
+  {
+    color: 'blue',
+    label: '',
+    xPosition: '1'
+  }
+];
+
+var w = 300,
+    h = 80;
+
+var svg = d3.select("#color-gradient").append("svg")
+    .attr("width", w)
+    .attr("height", h);
+
+// Defines the dimensions and orientation of the gradient
+var gradient = svg.append("defs")
+  .append("linearGradient")
+    .attr("id", "gradient")
+    .attr("x1", "0%")
+    .attr("x2", "100%")
+    .attr("y1", "0%")
+    .attr("y2", "0%");
+
+// Defines the position and color of the gradient
+gradient.selectAll("stop")
+    .data(gradientData)
+    .enter()
+    .append("stop")
+    .attr('offset', function(d) {
+        return d.xPosition;
+      })
+    .style('stop-color', function(d) {
+        return d.color;
+      })
+    .style('stop-opacity', 0.9);
+
+// Defines the rectangle that the gradient will live in
+svg.append("rect")
+    .attr("width", w)
+    .attr("height", h/2)
+    .style("fill", "url(#gradient)");
+
+
+// Defines the area for the lines and labels
+var g = svg.append('g')
+      .selectAll('.label')
+      .data(gradientData)
+      .enter();
+
+// Defines the color, position and length of the lines extending below the gradient
+g.append('line')
+  .style('stroke', function(d) {
+    return d.color;
+  })
+  .style('stroke-width', 2)
+  .attr('x1',function(d){
+    return parseFloat(d.xPosition)*100 + '%';
+  })
+  .attr('x2',function(d){
+    return parseFloat(d.xPosition)*100 + '%';
+  })
+  .attr('y1',function(d){
+    return h / 2;
+  })
+   .attr('y2',function(d){
+    return h;
+  });
+
+// Defines the position, content, and styling of the text for the labels
+g.append('text')
+  .text(function(d){
+    return d.label;
+  })
+  .attr('transform',function(d, i){
+    console.log(w);
+    if (i === 0){
+      return 'translate(' + (parseFloat(d.xPosition)*w + 14) + ',' + ((h) - 22) + ')';
+    } else if (i === 1 ) {
+      return 'translate(' + (parseFloat(d.xPosition)*w + 45) + ',' + ((h) - 22) + ')';
+    } else if (i === 2 ) {
+      return 'translate(' + (parseFloat(d.xPosition)*w + 2) + ',' + ((h) - 22) + ')';
+    }
+  })
+  .style('fill', 'white')
+  .style('font-size', '0.8em');
+
+g.append('text')
+  .text(function(d){
+    return d.label2;
+  })
+  .attr('transform',function(d, i){
+    console.log(w);
+    if (i === 0){
+      return 'translate(' + (parseFloat(d.xPosition)*w + 13) + ',' + ((h) - 2) + ')';
+    } else if (i === 1 ) {
+      return 'translate(' + (parseFloat(d.xPosition)*w + 40) + ',' + ((h) - 2) + ')';
+    } else if (i === 2 ) {
+      return 'translate(' + (parseFloat(d.xPosition)*w + 20) + ',' + ((h) - 2) + ')';
+    }
+  })
+  .style('fill', 'white')
+  .style('font-size', '0.8em');
+
+// Defines the gradient that will style the earthquake points
 var colorGradient = d3.scale.linear()
     .domain([0,70, 300, 600])
-    .range(['#ff2600', 'rgb(236, 154, 46)', 'rgb(249, 151, 96)', '#faff09']);
-
+    // .range(['#ff2600', 'rgb(236, 154, 46)', 'rgb(249, 151, 96)', '#faff09']);
+    .range(['red', 'yellow', 'green', 'blue']);
 
 // var zoom = d3.behavior.zoom(true)
 //           .translate()
@@ -32,11 +157,13 @@ var colorGradient = d3.scale.linear()
 //     }
 // }
 
+// Updates all map features
 function refresh() {
   svg.selectAll(".point").attr("d", path);
   svg.selectAll(".land").attr("d", path);
 }
 
+// Defines rotation behavior of mouse drag
 var mousePosition, projRotation;
 
 function mousedown() {
@@ -44,15 +171,17 @@ function mousedown() {
   projRotation = window.proj.rotate();
   d3.event.preventDefault();
 }
+
 function mousemove() {
   if (mousePosition) {
     var newMousePosition = [d3.event.pageX, d3.event.pageY];
     newRotation = [projRotation[0] + (newMousePosition[0] - mousePosition[0])/2, projRotation[1] + (mousePosition[1] - newMousePosition[1])/2];
     window.proj.rotate(newRotation);
-    sky.rotate(newRotation);
+    window.space.rotate(newRotation);
     refresh();
   }
 }
+
 function mouseup() {
   if (mousePosition) {
     mousemove();
@@ -60,85 +189,89 @@ function mouseup() {
   }
 }
 
+// Generates globe
 function drawGlobe(svg, world){
 
-var ocean_fill = svg.append("defs").append("radialGradient")
-     .attr("id", "ocean_fill")
-     .attr("cx", "75%")
-     .attr("cy", "25%");
-   ocean_fill.append("stop").attr("offset", "5%").attr("stop-color", "#fff");
-   ocean_fill.append("stop").attr("offset", "100%").attr("stop-color", "#ababab");
-
-var globe_highlight = svg.append("defs").append("radialGradient")
-     .attr("id", "globe_highlight")
-     .attr("cx", "75%")
-     .attr("cy", "25%");
-   globe_highlight.append("stop")
-     .attr("offset", "5%").attr("stop-color", "#ffd")
-     .attr("stop-opacity","0.6");
-   globe_highlight.append("stop")
-     .attr("offset", "100%").attr("stop-color", "#ba9")
-     .attr("stop-opacity","0.2");
-
-var globe_shading =       svg.append("defs").append("radialGradient")
-     .attr("id", "globe_shading")
-     .attr("cx", "55%")
-     .attr("cy", "45%");
-   globe_shading.append("stop")
-     .attr("offset","30%").attr("stop-color", "#fff")
-     .attr("stop-opacity","0");
-   globe_shading.append("stop")
-     .attr("offset","100%").attr("stop-color", "#505962")
-     .attr("stop-opacity","0.3");
-
-     svg.append("circle")
-     .attr('cx', width / 2)
-     .attr('cy', height / 2)
-     .attr('r', window.proj.scale())
-     .attr('class', 'globe')
-     .attr("filter", "url(#glow)")
-     .attr("fill", "url(#gradBlue)");
+   svg.append("circle")
+   .attr('cx', width / 2)
+   .attr('cy', height / 2)
+   .attr('r', window.proj.scale())
+   .attr('class', 'globe')
+   .attr("filter", "url(#glow)")
+   .attr("fill", "url(#gradBlue)");
 
   svg.append("path")
     .datum(topojson.object(world, world.objects.land))
     .attr("class", "land noclicks")
     .attr("d", path);
 
-    svg.append("circle")
-      .attr("cx", width / 2).attr("cy", height / 2)
-      .attr("r", window.proj.scale())
-      .attr("class","noclicks")
-      .style("fill", "url(#globe_highlight)");
+  var globe_highlight = svg.append("defs").append("radialGradient")
+       .attr("id", "globe_highlight")
+       .attr("cx", "75%")
+       .attr("cy", "25%");
+     globe_highlight.append("stop")
+       .attr("offset", "5%").attr("stop-color", "#ffd")
+       .attr("stop-opacity","0.6");
+     globe_highlight.append("stop")
+       .attr("offset", "100%").attr("stop-color", "#ba9")
+       .attr("stop-opacity","0.2");
 
-    svg.append("circle")
-      .attr("cx", width / 2).attr("cy", height / 2)
-      .attr("r", window.proj.scale())
-      .attr("class","noclicks")
-      .style("fill", "url(#globe_shading)");
+  svg.append("circle")
+    .attr("cx", width / 2).attr("cy", height / 2)
+    .attr("r", window.proj.scale())
+    .attr("class","noclicks")
+    .style("fill", "url(#globe_highlight)");
 
-      rotateGlobe();
+  var globe_shading = svg.append("defs").append("radialGradient")
+       .attr("id", "globe_shading")
+       .attr("cx", "55%")
+       .attr("cy", "45%");
+     globe_shading.append("stop")
+       .attr("offset","30%").attr("stop-color", "#fff")
+       .attr("stop-opacity","0");
+     globe_shading.append("stop")
+       .attr("offset","100%").attr("stop-color", "#505962")
+       .attr("stop-opacity","0.3");
 
-    }
+  svg.append("circle")
+    .attr("cx", width / 2).attr("cy", height / 2)
+    .attr("r", window.proj.scale())
+    .attr("class","noclicks")
+    .style("fill", "url(#globe_shading)");
 
-function bindDateButton() {
-  $('#dateButton').on('click', function(){
+  rotateGlobe();
+
+}
+
+// Collects information from search parameters and triggers renderGlobe()
+function bindSubmitButton() {
+  $('#submitButton').on('click', function(){
     var startTime = $('#from').val();
     var endTime = $('#to').val();
-    var minmag = $('#minmag').val();
-    $('#daterange').attr('data-start', startTime);
-    $('#daterange').attr('data-end', endTime);
-    renderGlobe(startTime, endTime, minmag, svg);
-    $( "#to" ).datepicker( "option", "maxDate", new Date());
-    $( "#from" ).datepicker( "option", "maxDate", new Date());
-    var dates = $("input[id$='from'], input[id$='to']");
-    dates.attr('value', '');
-    dates.each(function(){
-        $.datepicker._clearDate(this);
-    });
-    $('#minmag').val('2');
+    var slider = document.getElementById('magSlider');
+    magVals = $('.slider').slider("option", "values");
+    var minmag = magVals[0];
+    var maxmag = magVals[1];
+    if (startTime === "" || endTime === ""){
+      $("#error-message").text("All fields are required");
+    } else {
+      $("#error-message").text("");
+      $('#daterange').attr('data-start', startTime);
+      $('#daterange').attr('data-end', endTime);
+      renderGlobe(startTime, endTime, minmag, maxmag, svg);
+      $( "#to" ).datepicker( "option", "maxDate", new Date());
+      $( "#from" ).datepicker( "option", "maxDate", new Date());
+      var dates = $("input[id$='from'], input[id$='to']");
+      dates.attr('value', '');
+      dates.each(function(){
+          $.datepicker._clearDate(this);
+      });
+    }
   });
 }
 
+
+// Defines behavior of rotate button
 var interval;
 var rotate = false;
 
@@ -151,7 +284,7 @@ function rotateGlobe(){
     rotate = true;
     interval = setInterval(function(){
       var rot = proj.rotate();
-      proj.rotate([rot[0]+=0.2, rot[1]+=0.01]);
+      proj.rotate([rot[0]+=0.3, rot[1]+=0.01]);
       refresh();
     }, 50);
   } else {
@@ -181,15 +314,16 @@ function randomLonLat(){
     return [Math.random() * 360 - 180, Math.random() * 180 - 90];
 }
 
-function renderGlobe(startTime, endTime, minmag, svg) {
+function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
 
+  // Stops globe rotation if rotating
   if (rotate){
     rotateGlobe();
   }
 
   queue()
   // .defer(d3.json, "/js/world2.json")
-  .defer(d3.json, "http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=" + startTime + "&endtime=" + endTime + "&minmagnitude=" + minmag)
+  .defer(d3.json, "http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=" + startTime + "&endtime=" + endTime + "&minmagnitude=" + minmag + "&maxmagnitude=" + maxmag)
   .await(ready);
 
   function ready(error, quakes) {
@@ -207,19 +341,14 @@ function renderGlobe(startTime, endTime, minmag, svg) {
 
     var quakesNum = quakes.length;
 
-    $('#daterange>h4').text("Number of earthquakes, of magnitude " + minmag + " or larger, between " + formatStartDate + " and " + formatEndDate + ": " + quakesNum);
-    //
-    // if (!window.globeDrawn){
-    //   drawGlobe(svg, world);
-    //   window.globeDrawn = true;
-    // }
+    $('#daterange>h4').html("Number of earthquakes,<br/>between " + minmag + " and " + maxmag + " magnitude,<br/>from " + formatStartDate + " to " + formatEndDate + ":<br/>" + quakesNum);
 
+    // Generates quake data for point generation
     var places = [];
     for (var i = 0; i < quakes.length; i++) {
 
       latitude = quakes[i].geometry.coordinates[1];
       longitude = quakes[i].geometry.coordinates[0];
-      // console.log(tzwhere.tzOffsetAt(latitude, longitude));
       magnitude = quakes[i].properties.mag;
       area = quakes[i].properties.place;
       milliseconds = quakes[i].properties.time;
@@ -233,101 +362,113 @@ function renderGlobe(startTime, endTime, minmag, svg) {
         // svg.selectAll('g').data([0]).enter().append("g").attr("class","points");
         // svg.append('g').attr("class","points");
 
-        svg.selectAll('g').data([0,1]).enter().append("g").attr("class","points");
+    // Appends g element to contain quake points
+    svg.selectAll('g').data([0,1]).enter().append("g").attr("class","points");
 
-          svg.selectAll('g').selectAll(".point").data(places)
-          .enter().append("path")
-            .attr("class", "point");
-          var pulse;
-          svg.selectAll(".point").data(places)
-          .on("mouseover", function(place){
-            this.style.fill = 'white';
-            var that = this;
+    // Appends quake points
+    svg.selectAll('g').selectAll(".point").data(places)
+    .enter().append("path")
+      .attr("class", "point");
 
-            // Applying pulse behavior to quake point
-            pulse = setInterval(function(){
-              d3.select(that)
-                .transition()
-                .duration(250)
-                .attr("d", path.pointRadius(function(place){
-                    return Math.pow(place.magnitude/2.4, 3.5);
-                }))
-                .transition()
-                .duration(250)
-                .attr("d", path.pointRadius(function(place){
-                    return Math.pow(place.magnitude/2.8, 3.5);
-                }));
-            }, 500);
+    // Defines point behavior and styling
+    var pulse;
+    svg.selectAll(".point").data(places)
+    .on("mouseover", function(place){
+      if(rotate){
+        rotateGlobe();
+      }
+      this.style.fill = 'white';
+      var that = this;
 
-            // Appending triangle pointer for info box
-            $(".externalObject").remove();
-            svg.append('path')
-            .attr('class', 'textBoxTriangle')
-            .attr('d', function() {
-              return ' M ' + (d3.event.pageX - 10) + ' ' + (d3.event.pageY - 30) + ' L ' + (d3.event.pageX - 70) + ' ' + (d3.event.pageY - 90) + ' L ' + (d3.event.pageX - 50) + ' ' + (d3.event.pageY - 90) + ' L ' + (d3.event.pageX - 10) + ' ' + (d3.event.pageY - 30) ;
-            })
-            .attr('fill', 'white')
-            .attr('opacity', '0.7');
+      // Applies pulse behavior to quake point
+      pulse = setInterval(function(){
+        d3.select(that)
+          .transition()
+          .duration(300)
+          .attr("d", path.pointRadius(function(place){
+              return Math.pow(place.magnitude/2.4, 3.5);
+          }))
+          .transition()
+          .duration(300)
+          .attr("d", path.pointRadius(function(place){
+              return Math.pow(place.magnitude/2.8, 3.5);
+          }));
+      }, 600);
 
-            // Appending info box container
-            var textBox = svg.append('g')
-                             .attr("class", "textContainer");
+      // Appends triangle pointer for info box
+      $(".externalObject").remove();
+      svg.append('path')
+      .attr('class', 'textBoxTriangle')
+      .attr('d', function() {
+        return ' M ' + (d3.event.pageX - 10) + ' ' + (d3.event.pageY - 30) + ' L ' + (d3.event.pageX - 70) + ' ' + (d3.event.pageY - 90) + ' L ' + (d3.event.pageX - 50) + ' ' + (d3.event.pageY - 90) + ' L ' + (d3.event.pageX - 10) + ' ' + (d3.event.pageY - 30) ;
+      })
+      .attr('fill', 'white')
+      .attr('opacity', '0.7');
 
-            // Appending info box
-            newRect = textBox.append("rect")
-            .attr("x", (d3.event.pageX - 100) + "px")
-            .attr("y", (d3.event.pageY - 200) + "px")
-            .attr("width", 350)
-            .attr("height", 110)
-            .attr("fill", "white")
-            .attr('opacity', '0.7')
-            .attr("class", "textBox");
+      // Appends info box container
+      var textBox = svg.append('g')
+                       .attr("class", "textContainer");
 
-            // Appending info box text
-            textBox.append("foreignObject")
-              .attr("class", "externalObject")
-              .attr("color", "black")
-              .attr("x", (d3.event.pageX - 100) + "px")
-              .attr("y", (d3.event.pageY - 200) + "px")
-              .attr("width", 300)
-              .attr("height", 80)
-              .attr("transform", "translate(10, 10)")
-              .append("xhtml:div")
-              .html("Location: " + place.area + "<br/>Date: " + place.date + "<br/>Magnitude: " + place.magnitude + "<br/>Depth: " + place.depth + ' km');
+      // Appends info box
+      newRect = textBox.append("rect")
+      .attr("x", (d3.event.pageX - 150) + "px")
+      .attr("y", (d3.event.pageY - 215) + "px")
+      .attr("width", 390)
+      .attr("height", 125)
+      .attr("fill", "white")
+      .attr('opacity', '0.7')
+      .attr("class", "textBox");
 
-          })
-          .on("mouseout", function(place){
+      // Appends info box text
+      textBox.append("foreignObject")
+        .attr("class", "externalObject")
+        .attr("color", "black")
+        .attr("x", (d3.event.pageX - 150) + "px")
+        .attr("y", (d3.event.pageY - 215) + "px")
+        .attr("width", 390)
+        .attr("height", 80)
+        .attr("transform", "translate(10, 10)")
+        .append("xhtml:div")
+        .html("Location: " + place.area + "<br/>Date: " + place.date + "<br/>Magnitude: " + place.magnitude + "<br/>Depth: " + place.depth + ' km');
 
-            // Removing info box elements
-            $(".externalObject").remove();
-            $(".textContainer").remove();
-            $(".textBox").remove();
-            $(".textBoxTriangle").remove();
+      })
 
-            // Stopping pulse behavior
-            clearInterval(pulse);
-            $('#quake-info>h4').html("");
-            this.style.fill = colorGradient(place.depth);
-            })
-            .transition()
-            .duration(800)
-            .attr("d", path.pointRadius(0))
-            .style('fill', function(place){
-              return colorGradient(place.depth);
-            })
-            .style('opacity', '0.7')
+      .on("mouseout", function(place){
 
-            .transition()
-            .duration(800)
-            .attr("d", path.pointRadius(function(place){
-                return Math.pow(place.magnitude/2.4, 3.5);
-            }))
-            .transition()
-            .duration(500)
-            .attr("d", path.pointRadius(function(place){
-                return Math.pow(place.magnitude/2.8, 3.5);
-            }));
-            svg.selectAll('.point').data(places).exit().remove();
+        // Removes info box elements
+        $(".externalObject").remove();
+        $(".textContainer").remove();
+        $(".textBox").remove();
+        $(".textBoxTriangle").remove();
+
+        // Stops pulse behavior
+        clearInterval(pulse);
+        this.style.fill = colorGradient(place.depth);
+        })
+        .transition()
+        .duration(800)
+        .attr("d", path.pointRadius(0))
+        .style('fill', function(place){
+          return colorGradient(place.depth);
+        })
+        .style('opacity', '0.7')
+        .style('stroke', 'darkred')
+
+        .transition()
+        .duration(800)
+        .attr("d", path.pointRadius(function(place){
+            return Math.pow(place.magnitude/2.4, 3.5);
+        }))
+        .transition()
+        .duration(500)
+        .attr("d", path.pointRadius(function(place){
+            return Math.pow(place.magnitude/2.8, 3.5);
+        }));
+        svg.selectAll('.point').data(places).exit().remove();
+
+      $('#daterange').css('display', 'block');
+      $('#gradient-div').css('display', 'block');
+
     }
 
     // if (!rotate){
@@ -335,14 +476,14 @@ function renderGlobe(startTime, endTime, minmag, svg) {
     //   rotateGlobe();
     //   },2000);
     // }
-
   }
 
 window.onload = function(){
 
-  bindDateButton();
+  bindSubmitButton();
   bindRotateToggleButton();
 
+  // Defines behavior of date picker
   $(function() {
     $( "#from" ).datepicker({
       changeMonth: true,
@@ -373,34 +514,35 @@ window.onload = function(){
       .on("mousemove", mousemove)
       .on("mouseup", mouseup);
 
-  var space = d3.geo.azimuthalEquidistant()
+  window.space = d3.geo.azimuthalEquidistant()
       .translate([width / 2, height / 2]);
 
   space.scale(space.scale() * 3);
 
-  var spacePath = d3.geo.path()
+  window.spacePath = d3.geo.path()
       .projection(space)
       .pointRadius(1);
 
   window.proj = d3.geo.orthographic()
       .translate([width / 2, height / 2])
       .clipAngle(90)
-      .scale(300);
+      .scale(260);
 
-  window.sky = d3.geo.orthographic()
-      .translate([width / 2, height / 2])
-      .clipAngle(90)
-      .scale(300);
+  // window.sky = d3.geo.orthographic()
+  //     .translate([width / 2, height / 2])
+  //     .clipAngle(90)
+  //     .scale(240);
 
   window.path = d3.geo.path().projection(window.proj).pointRadius(2);
 
+  // Appends svg container
   svg = d3.select("body").append("svg")
           .attr("width", width)
           .attr("height", height)
           .on("mousedown", mousedown);
 
   var starList = createStars(300);
-  //
+
   var stars = svg
       .selectAll("g")
       .data(starList)
@@ -412,9 +554,23 @@ window.onload = function(){
               return spacePath(d);
           });
 
-
+  // Renders empty globe
   d3.json("/js/world2.json", function(world){
     drawGlobe(svg, world);
   });
 
+  // Defines behavior of magnitude slider
+  $("#magSlider")
+    .slider({
+        min: 2,
+        max: 10,
+        step: 0.1,
+        // range: true,
+        values: [2, 10]
+    })
+    .slider("pips", {
+        rest: "label",
+        step: 10
+    })
+    .slider("float");
 };

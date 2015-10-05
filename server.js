@@ -1,8 +1,5 @@
 var express = require('express');
 
-var tzwhere = require('tzwhere');
-tzwhere.init();
-
 var app = express();
 
 app.use(express.static(__dirname + '/client'));

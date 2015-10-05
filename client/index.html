@@ -2,9 +2,12 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>quakeViewer</title>
-    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+    <title>quakeQuery</title>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.10.4/themes/flick/jquery-ui.css">
     <link rel="stylesheet" href="/css/styles-zoom.css">
+    <link rel="stylesheet" href="/css/nouislider.css">
+    <link rel="stylesheet" href="/css/nouislider.pips.css">
+    <link rel="stylesheet" href="/css/jquery-ui-slider-pips.css">
   </head>
   <body>
     <svg id="defs">
@@ -31,44 +34,38 @@
 
 
     <section id="quake-field">
-      <h3>Quakes!</h3>
+      <h1>quakeQuery</h1>
       <div id="options">
         <div>
-          <label for="from">From</label>
-          <input type="text" id="from" name="from">
+          <h4>Please enter your search parameters:</h4>
         </div>
-        <div>
-          <label for="to">To</label>
-          <input type="text" id="to" name="to">
+        <div id="error-message">
         </div>
-        <div>
-          <label for="minmag">Minimum Magnitude</label>
-          <select type="text" id="minmag" name="minmag">
-            <!-- <option value="0">0</option>
-            <option value="1">1</option> -->
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-          </select>
+        <div class="search-options">
+          <label for="from">Start Date</label>
+          <input type="text" id="from" name="from" required>
         </div>
-        <button type="button" id="dateButton">Submit</button><br/>
-        <button type="button" id="rotateToggleButton">Rotate the Globe</button>
+        <div class="search-options">
+          <label for="to">End Date</label>
+          <input type="text" id="to" name="to" required>
+        </div>
+        <div id="magnitude">Magnitude range:</div>
+        <div class="slider" id="magSlider"></div>
+        <button type="button" id="submitButton">Submit</button><br/>
       </div>
     </section>
-    <div id="daterange">
-      <h4></h4>
+    <div id="gradient-div">
+      <div id="gradientText">Earthquake Depth</div>
+      <div id="color-gradient"></div>
     </div>
-
-    <div id="quake-info">
+    <button type="button" id="rotateToggleButton">Rotate Globe</button>
+    <div id="daterange">
       <h4></h4>
     </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+    <script src="/js/nouislider.js" charset="utf-8"></script>
+    <script src="/js/lib/jquery-ui-slider-pips.js" charset="utf-8"></script>
     <script src='js/lib/d3.js'></script>
     <script src='js/lib/d3_queue.js'></script>
     <script src='js/lib/d3_topojson.js'></script>
