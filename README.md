@@ -1,1 +1,1 @@
-# quakeFinder
+# quakeQuery

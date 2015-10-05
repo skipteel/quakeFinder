@@ -161,6 +161,7 @@ var colorGradient = d3.scale.linear()
 function refresh() {
   svg.selectAll(".point").attr("d", path);
   svg.selectAll(".land").attr("d", path);
+  svg.selectAll(".tectonic").attr("d", path);
 }
 
 // Defines rotation behavior of mouse drag
@@ -363,7 +364,7 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
         // svg.append('g').attr("class","points");
 
     // Appends g element to contain quake points
-    svg.selectAll('g').data([0,1]).enter().append("g").attr("class","points");
+    svg.selectAll('g').data([0]).enter().append("g").attr("class","points");
 
     // Appends quake points
     svg.selectAll('g').selectAll(".point").data(places)
@@ -469,6 +470,25 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
       $('#daterange').css('display', 'block');
       $('#gradient-div').css('display', 'block');
 
+  // var circleLines = setInterval(function() {
+  //
+  //   svg.selectAll('.point').append("circle")
+  //       .attr("d", 0)
+  //       .style("stroke", function(d) {
+  //         return "rgb(222, 45, 38)"; // color( +d.geometry.coordinates[2] );
+  //       })
+  //       .style("stroke-width", 2)
+  //     .transition()
+  //       .ease("linear")
+  //       .duration(1000)
+  //       .attr("d", path.pointRadius(function(d) { return Math.pow(d.magnitude/2, 5); }))
+  //       .style("stroke-opacity", 0)
+  //       .style("stroke-width", 0)
+  //       .remove();
+  //
+  // }, 1000);
+
+
     }
 
     // if (!rotate){
@@ -555,9 +575,31 @@ window.onload = function(){
           });
 
   // Renders empty globe
-  d3.json("/js/world2.json", function(world){
+  queue()
+  .defer(d3.json, "/js/world2.json")
+  .defer(d3.json, '/js/tectonics.json')
+  .await(render);
+
+  function render(error, world, tectonics){
     drawGlobe(svg, world);
-  });
+
+    svg.insert("path", ".graticule")
+        .datum(topojson.object(tectonics, tectonics.objects.tec))
+        .attr("class", "tectonic")
+        .attr("d", path);
+  }
+//   d3.json("/js/world2.json", function(err, world){
+//     drawGlobe(svg, world);
+//   });
+//
+//   d3.json('/js/tectonics.json', function(err, data) {
+//
+//   svg.insert("path", ".graticule")
+//       .datum(topojson.object(data, data.objects.tec))
+//       .attr("class", "tectonic")
+//       .attr("d", path);
+//
+// });
 
   // Defines behavior of magnitude slider
   $("#magSlider")

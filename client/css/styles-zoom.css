@@ -12,6 +12,13 @@ body {
   text-align: right;
 }
 
+
+.tectonic {
+  fill: none;
+  stroke: #de2323;
+  stroke-width: 3px;
+  opacity: 0.5;
+}
 /*#info {
     position: absolute;
     z-index: 10;
