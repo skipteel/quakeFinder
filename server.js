@@ -8,6 +8,7 @@ app.get('/', function(req, res){
   res.sendFile(__dirname + '/client/index.html');
 });
 
-app.listen('8080', function(){
+var port = process.env.PORT || '8080';
+app.listen(port, function(){
   console.log('...listening');
 });
