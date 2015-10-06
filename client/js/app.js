@@ -286,7 +286,6 @@ function bindTimeLapseButton(){
         slider.slider("value", (slider.slider("value")+($('#timelapseSlider').slider('option', 'max') - $('#timelapseSlider').slider('option', 'min'))/135));
       }
 
-
       // Restart/Stop time lapse when slider reaches the end
       if (slider.slider("value") === slider.slider("option",
      'max')){
@@ -323,17 +322,27 @@ function bindEndTimeLapseButton(){
 
 // Rewind/fastforward move the slider backwards/forwards by one hour
 function bindRewindTimeLapseButton(){
-  $('#rewindTimeLapseButton').on('click', function(){
+  $('#rewindTimeLapseButton').on('mousedown', function(){
     var slider = $('#timelapseSlider');
     slider.slider('value', slider.slider('value') - 3600000);
   });
 }
 
 function bindFastForwardTimeLapseButton(){
-  $('#fastForwardTimeLapseButton').on('click', function(){
+  $('#fastForwardTimeLapseButton').on('mousedown', function(){
     var slider = $('#timelapseSlider');
     slider.slider('value', slider.slider('value') + 3600000);
   });
+}
+
+// Determines whether a quake should be visible during the timelapse
+function drawQuakes(){
+  svg.selectAll('.point')
+  .style('visibility', function(d){
+    return d.milliseconds < $('#timelapseSlider').slider('value') ? "visible" : "hidden";
+  });
+  // Appends updated date/time below slider
+  $('#timelapseDate').html(new Date($('#timelapseSlider').slider('value')).toUTCString().slice(0, 29));
 }
 
 // Defines behavior of rotate button
@@ -411,29 +420,10 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
           max: new Date(endTime).valueOf(),
 
           // Defines behaviors when slider is manipulated
-          slide: function drawQuakes(min, max){
-            svg.selectAll('.point')
-            .style('visibility', function(d){
-              return d.milliseconds < $('#timelapseSlider').slider('value') ? "visible" : "hidden";
-            });
-            $('#timelapseDate').html(new Date($('#timelapseSlider').slider('value')).toUTCString().slice(0, 29));
-          },
+          slide: drawQuakes,
 
           // Defines behaviors when time lapse is initiated
-          change: function drawQuakes(min, max){
-            svg.selectAll('.point')
-            .style('visibility', function(d){
-              return d.milliseconds < $('#timelapseSlider').slider('value') ? "visible" : "hidden";
-              // if(place.milliseconds>$('.ui-slider-tip')[2].textContent){
-              //   return 'visible';
-              // } else {
-              //   return 'hidden';
-              // }
-            });
-
-            // Appends updated date/time below slider
-            $('#timelapseDate').html(new Date($('#timelapseSlider').slider('value')).toUTCString().slice(0, 29));
-          },
+          change: drawQuakes,
           animate: true
       });
       // .slider("pips", {
