@@ -32,7 +32,6 @@
         </defs>
     </svg>
 
-
     <section id="quake-field">
       <h1>quakeQuery</h1>
       <div id="options">
@@ -59,8 +58,13 @@
       <div id="color-gradient"></div>
     </div>
     <button type="button" id="rotateToggleButton">Rotate Globe</button>
-    <div id="daterange">
-      <h4></h4>
+    <div id="quakeSummary">
+      <div id="daterange">
+        <h4 id="quakeSummaryText"></h4>
+      </div>
+      <div class="slider" id="timelapseSlider"></div>
+      <button type-"button" id="timelapseButton">Time Lapse</button>
+      <button type-"button" id="stoptimelapseButton">Stop Time Lapse</button>
     </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>

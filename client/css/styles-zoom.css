@@ -36,6 +36,10 @@ h1 {
   font-size: 2em;
 }
 
+#quakeSummaryText {
+  margin:0;
+}
+
 #defs {
     height: 0;
     width:0;
@@ -46,7 +50,7 @@ h1 {
     pointer-events: all;
 }
 
-#dateButton {
+#submitButton {
   margin-top: 8%;
 }
 
@@ -81,14 +85,26 @@ h1 {
   top: 2%;
 }
 
-#daterange {
+#quakeSummary {
   display: none;
   position: absolute;
   right: 4%;
   top: 6%;
   text-align: center;
+}
+
+#daterange{
   border: 2px solid white;
   padding: 10px;
+  padding-bottom:4%;
+  margin-bottom: 5%;
+}
+
+#credit {
+  font-size: 0.6em;
+  /*position: absolute;
+  bottom: 4%;
+  right:3%;*/
 }
 
 #gradient-div {

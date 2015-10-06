@@ -270,7 +270,35 @@ function bindSubmitButton() {
     }
   });
 }
+var lapse;
+function bindTimeLapseButton(){
+  $('#timelapseButton').on('click', function(){
+    console.log('click');
+    var slider = $('#timelapseSlider');
+    lapse = setInterval(function(){
+      slider.slider("value", slider.slider("value")+36000000);
+      // return false;
+      if (slider.slider("value") === slider.slider("option",
+     'max')){
+        console.log('end');
+        clearInterval(lapse);
+      }
+    }, 100);
+  });
+}
 
+function bindStopTimeLapseButton(){
+  $('#stoptimelapseButton').on('click', function(){
+    clearInterval(lapse);
+  });
+}
+
+function bindBeginningTimeLapseButton(){
+  $('#beginningTimeLapseButton').on('click', function(){
+    var slider = $('#timelapseSlider');
+    slider.slider('value', slider.slider('option', 'max'));
+  });
+}
 
 // Defines behavior of rotate button
 var interval;
@@ -336,13 +364,36 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
     var startTime = $('#daterange').attr('data-start');
     var endTime = $('#daterange').attr('data-end');
 
+    $("#timelapseSlider")
+      .slider({
+          min: new Date(startTime).valueOf(),
+          max: new Date(endTime).valueOf(),
+          change: function drawQuakes(min, max){
+            svg.selectAll('.point')
+            .style('visibility', function(d){
+              return d.milliseconds < $('#timelapseSlider').slider('value') ? "visible" : "hidden";
+              // if(place.milliseconds>$('.ui-slider-tip')[2].textContent){
+              //   return 'visible';
+              // } else {
+              //   return 'hidden';
+              // }
+            });
+          },
+          animate: true
+      });
+      // .slider("pips", {
+      //     rest: "label",
+      //     step: 10
+      // })
+      // .slider("float");
+
     var formatStartDate = startTime.slice(5,7) + '/' + startTime.slice(8,10) + '/' + startTime.slice(0,4);
 
     var formatEndDate = endTime.slice(5,7) + '/' + endTime.slice(8,10) + '/' + endTime.slice(0,4);
 
     var quakesNum = quakes.length;
 
-    $('#daterange>h4').html("Number of earthquakes,<br/>between " + minmag + " and " + maxmag + " magnitude,<br/>from " + formatStartDate + " to " + formatEndDate + ":<br/>" + quakesNum);
+    $('#daterange>h4').html("Number of earthquakes,<br/>between " + minmag + " and " + maxmag + " magnitude,<br/>from " + formatStartDate + " to " + formatEndDate + ":<br/>" + quakesNum + '<br/><br/><span id="credit">Earthquake catalog courtesy of the U.S. Geological Survey</span>');
 
     // Generates quake data for point generation
     var places = [];
@@ -355,8 +406,10 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
       milliseconds = quakes[i].properties.time;
       date = new Date(milliseconds).toUTCString();
       depth = quakes[i].geometry.coordinates[2];
+      url = quakes[i].properties.url;
+      id = quakes[i].id;
 
-      places.push({ "depth": depth, "magnitude": magnitude, "area": area, "type": "Feature", "date": date, "geometry": { "type": "Point", "coordinates": [ longitude, latitude ]} });
+      places.push({ "id": id, "url": url, "milliseconds": milliseconds, "depth": depth, "magnitude": magnitude, "area": area, "type": "Feature", "date": date, "geometry": { "type": "Point", "coordinates": [ longitude, latitude ]} });
     }
 
         // Create g ONCE
@@ -374,6 +427,13 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
     // Defines point behavior and styling
     var pulse;
     svg.selectAll(".point").data(places)
+    .on("click", function(place){
+      // d3.json('http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventid=' + place.id, function(err, data){
+      //   var quakejpg = data.properties.products.shakemap[0].contents['download/intensity.jpg'].url;
+      //   window.open(quakejpg, '_blank');
+      // });
+      window.open(place.url, "_blank");
+    })
     .on("mouseover", function(place){
       if(rotate){
         rotateGlobe();
@@ -396,36 +456,29 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
           }));
       }, 600);
 
-      // Appends triangle pointer for info box
-      $(".externalObject").remove();
-      svg.append('path')
+      // Grabs coordinates of quake point center
+      var x = path.centroid(place)[0];
+      var y = path.centroid(place)[1];
+
+      // appends container for info text box
+      var textBox = svg.selectAll('.textContainer').data([0]).enter().append('g')
+                       .attr("class", "textContainer");
+
+      // draws shape of info container
+      textBox.append('path')
       .attr('class', 'textBoxTriangle')
-      .attr('d', function() {
-        return ' M ' + (d3.event.pageX - 10) + ' ' + (d3.event.pageY - 30) + ' L ' + (d3.event.pageX - 70) + ' ' + (d3.event.pageY - 90) + ' L ' + (d3.event.pageX - 50) + ' ' + (d3.event.pageY - 90) + ' L ' + (d3.event.pageX - 10) + ' ' + (d3.event.pageY - 30) ;
+      .attr('d', function(d) {
+        return ' M ' + x + ' ' + y + ' L ' + (x - 70) + ' ' + (y - 90) + ' L ' + (x - 151) + ' ' + (y - 90) + ' L ' + (x - 151) + ' ' + (y - 215) + ' L ' + (x + 239) + ' ' + (y - 215) + ' L ' + (x + 239) + ' ' + (y - 90) + ' L ' + (x - 50) + ' ' + (y - 90) + ' L ' + x + ' ' + y;
       })
       .attr('fill', 'white')
       .attr('opacity', '0.7');
-
-      // Appends info box container
-      var textBox = svg.append('g')
-                       .attr("class", "textContainer");
-
-      // Appends info box
-      newRect = textBox.append("rect")
-      .attr("x", (d3.event.pageX - 150) + "px")
-      .attr("y", (d3.event.pageY - 215) + "px")
-      .attr("width", 390)
-      .attr("height", 125)
-      .attr("fill", "white")
-      .attr('opacity', '0.7')
-      .attr("class", "textBox");
 
       // Appends info box text
       textBox.append("foreignObject")
         .attr("class", "externalObject")
         .attr("color", "black")
-        .attr("x", (d3.event.pageX - 150) + "px")
-        .attr("y", (d3.event.pageY - 215) + "px")
+        .attr("x", (x - 151) + "px")
+        .attr("y", (y - 215) + "px")
         .attr("width", 390)
         .attr("height", 80)
         .attr("transform", "translate(10, 10)")
@@ -437,15 +490,16 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
       .on("mouseout", function(place){
 
         // Removes info box elements
-        $(".externalObject").remove();
-        $(".textContainer").remove();
-        $(".textBox").remove();
-        $(".textBoxTriangle").remove();
+        svg.selectAll('.textContainer').data([]).exit().remove();
+        // $(".externalObject").remove();
+        // $(".textContainer").remove();
+        // $(".textBox").remove();
+        // $(".textBoxTriangle").remove();
 
         // Stops pulse behavior
         clearInterval(pulse);
         this.style.fill = colorGradient(place.depth);
-        })
+      })
         .transition()
         .duration(800)
         .attr("d", path.pointRadius(0))
@@ -464,10 +518,11 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
         .duration(500)
         .attr("d", path.pointRadius(function(place){
             return Math.pow(place.magnitude/2.8, 3.5);
-        }));
+        }))
+        ;
         svg.selectAll('.point').data(places).exit().remove();
 
-      $('#daterange').css('display', 'block');
+      $('#quakeSummary').css('display', 'block');
       $('#gradient-div').css('display', 'block');
 
   // var circleLines = setInterval(function() {
@@ -502,6 +557,8 @@ window.onload = function(){
 
   bindSubmitButton();
   bindRotateToggleButton();
+  bindTimeLapseButton();
+  bindStopTimeLapseButton();
 
   // Defines behavior of date picker
   $(function() {
