@@ -399,7 +399,7 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
   // Sets up D3 api call using parameters from search inputs
   queue()
   // .defer(d3.json, "/js/world2.json")
-  .defer(d3.json, "http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=" + startTime + "&endtime=" + endTime + "&minmagnitude=" + minmag + "&maxmagnitude=" + maxmag)
+  .defer(d3.json, "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=" + startTime + "&endtime=" + endTime + "&minmagnitude=" + minmag + "&maxmagnitude=" + maxmag)
   .await(ready);
 
   function ready(error, quakes) {
