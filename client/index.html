@@ -3,11 +3,12 @@
   <head>
     <meta charset="utf-8">
     <title>quakeQuery</title>
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.10.4/themes/flick/jquery-ui.css">
-    <link rel="stylesheet" href="/css/styles-zoom.css">
-    <link rel="stylesheet" href="/css/nouislider.css">
-    <link rel="stylesheet" href="/css/nouislider.pips.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.10.4/themes/flick/jquery-ui.css">    <!-- <link rel="stylesheet" href="/css/nouislider.css">
+    <link rel="stylesheet" href="/css/nouislider.pips.css"> -->
     <link rel="stylesheet" href="/css/jquery-ui-slider-pips.css">
+    <link rel="stylesheet" href="/css/styles-zoom.css">
   </head>
   <body>
     <svg id="defs">
@@ -63,12 +64,18 @@
         <h4 id="quakeSummaryText"></h4>
       </div>
       <div class="slider" id="timelapseSlider"></div>
-      <button type-"button" id="timelapseButton">Time Lapse</button>
-      <button type-"button" id="stoptimelapseButton">Stop Time Lapse</button>
+      <div id="buttons">
+        <button type="button" id="beginningTimeLapseButton" class="controls"><i class="material-icons md-16">skip_previous</i></button>
+        <button type="button" id="rewindTimeLapseButton" class="controls"><i class="material-icons md-16">fast_rewind</i></button>
+        <button type="button" id="timelapseButton" class="controls"><i class="material-icons md-16">play_circle_outline</i></button>
+        <button type="button" id="stoptimelapseButton" class="controls"><i class="material-icons md-16">pause_circle_outline</i></button>
+        <button type="button" id="fastForwardTimeLapseButton" class="controls"><i class="material-icons md-16">fast_forward</i></button>
+        <button type="button" id="endTimeLapseButton" class="controls"><i class="material-icons md-16">skip_next</i></button>
+        <h3 id="timelapseDate"></h3>
+      </div>
     </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
-    <script src="/js/nouislider.js" charset="utf-8"></script>
     <script src="/js/lib/jquery-ui-slider-pips.js" charset="utf-8"></script>
     <script src='js/lib/d3.js'></script>
     <script src='js/lib/d3_queue.js'></script>

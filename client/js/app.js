@@ -270,33 +270,69 @@ function bindSubmitButton() {
     }
   });
 }
+
+// Defines behavior of time lapse buttons
 var lapse;
 function bindTimeLapseButton(){
   $('#timelapseButton').on('click', function(){
-    console.log('click');
+    $('#timelapseButton').off('click');
     var slider = $('#timelapseSlider');
     lapse = setInterval(function(){
-      slider.slider("value", slider.slider("value")+36000000);
-      // return false;
+
+      // increase slider speed when globe is rotating to account for lag
+      if(rotate){
+          slider.slider("value", (slider.slider("value")+($('#timelapseSlider').slider('option', 'max') - $('#timelapseSlider').slider('option', 'min'))/75));
+      } else {
+        slider.slider("value", (slider.slider("value")+($('#timelapseSlider').slider('option', 'max') - $('#timelapseSlider').slider('option', 'min'))/135));
+      }
+
+
+      // Restart/Stop time lapse when slider reaches the end
       if (slider.slider("value") === slider.slider("option",
      'max')){
-        console.log('end');
-        clearInterval(lapse);
+       clearInterval(lapse);
+       bindTimeLapseButton();
+      //  slider.slider('value', slider.slider('option', 'min'));
       }
-    }, 100);
+    }, 10);
   });
 }
 
 function bindStopTimeLapseButton(){
   $('#stoptimelapseButton').on('click', function(){
     clearInterval(lapse);
+    bindTimeLapseButton();
   });
 }
 
 function bindBeginningTimeLapseButton(){
   $('#beginningTimeLapseButton').on('click', function(){
     var slider = $('#timelapseSlider');
+    slider.slider('value', slider.slider('option', 'min'));
+    // bindTimeLapseButton();
+  });
+}
+
+function bindEndTimeLapseButton(){
+  $('#endTimeLapseButton').on('click', function(){
+    var slider = $('#timelapseSlider');
     slider.slider('value', slider.slider('option', 'max'));
+  });
+}
+
+
+// Rewind/fastforward move the slider backwards/forwards by one hour
+function bindRewindTimeLapseButton(){
+  $('#rewindTimeLapseButton').on('click', function(){
+    var slider = $('#timelapseSlider');
+    slider.slider('value', slider.slider('value') - 3600000);
+  });
+}
+
+function bindFastForwardTimeLapseButton(){
+  $('#fastForwardTimeLapseButton').on('click', function(){
+    var slider = $('#timelapseSlider');
+    slider.slider('value', slider.slider('value') + 3600000);
   });
 }
 
@@ -313,7 +349,7 @@ function rotateGlobe(){
     rotate = true;
     interval = setInterval(function(){
       var rot = proj.rotate();
-      proj.rotate([rot[0]+=0.3, rot[1]+=0.01]);
+      proj.rotate([rot[0]+=0.4, rot[1]+=0.01]);
       refresh();
     }, 50);
   } else {
@@ -350,6 +386,8 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
     rotateGlobe();
   }
 
+
+  // Sets up D3 api call using parameters from search inputs
   queue()
   // .defer(d3.json, "/js/world2.json")
   .defer(d3.json, "http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=" + startTime + "&endtime=" + endTime + "&minmagnitude=" + minmag + "&maxmagnitude=" + maxmag)
@@ -364,10 +402,24 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
     var startTime = $('#daterange').attr('data-start');
     var endTime = $('#daterange').attr('data-end');
 
+    // Defines properties of time lapse slider
     $("#timelapseSlider")
       .slider({
+
+          // Min/max properties correspond to the values of the start and end dates in milliseconds
           min: new Date(startTime).valueOf(),
           max: new Date(endTime).valueOf(),
+
+          // Defines behaviors when slider is manipulated
+          slide: function drawQuakes(min, max){
+            svg.selectAll('.point')
+            .style('visibility', function(d){
+              return d.milliseconds < $('#timelapseSlider').slider('value') ? "visible" : "hidden";
+            });
+            $('#timelapseDate').html(new Date($('#timelapseSlider').slider('value')).toUTCString().slice(0, 29));
+          },
+
+          // Defines behaviors when time lapse is initiated
           change: function drawQuakes(min, max){
             svg.selectAll('.point')
             .style('visibility', function(d){
@@ -378,6 +430,9 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
               //   return 'hidden';
               // }
             });
+
+            // Appends updated date/time below slider
+            $('#timelapseDate').html(new Date($('#timelapseSlider').slider('value')).toUTCString().slice(0, 29));
           },
           animate: true
       });
@@ -386,6 +441,8 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
       //     step: 10
       // })
       // .slider("float");
+
+    $('#timelapseDate').html(new Date($('#timelapseSlider').slider('value')).toUTCString().slice(0, 29));
 
     var formatStartDate = startTime.slice(5,7) + '/' + startTime.slice(8,10) + '/' + startTime.slice(0,4);
 
@@ -435,6 +492,7 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
       window.open(place.url, "_blank");
     })
     .on("mouseover", function(place){
+
       if(rotate){
         rotateGlobe();
       }
@@ -466,7 +524,7 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
 
       // draws shape of info container
       textBox.append('path')
-      .attr('class', 'textBoxTriangle')
+      .attr('class', 'textBoxShape')
       .attr('d', function(d) {
         return ' M ' + x + ' ' + y + ' L ' + (x - 70) + ' ' + (y - 90) + ' L ' + (x - 151) + ' ' + (y - 90) + ' L ' + (x - 151) + ' ' + (y - 215) + ' L ' + (x + 239) + ' ' + (y - 215) + ' L ' + (x + 239) + ' ' + (y - 90) + ' L ' + (x - 50) + ' ' + (y - 90) + ' L ' + x + ' ' + y;
       })
@@ -559,6 +617,11 @@ window.onload = function(){
   bindRotateToggleButton();
   bindTimeLapseButton();
   bindStopTimeLapseButton();
+  bindBeginningTimeLapseButton();
+  bindEndTimeLapseButton();
+  bindRewindTimeLapseButton();
+  bindFastForwardTimeLapseButton();
+
 
   // Defines behavior of date picker
   $(function() {
@@ -664,11 +727,13 @@ window.onload = function(){
         min: 2,
         max: 10,
         step: 0.1,
-        // range: true,
-        values: [2, 10]
+        range: true,
+        values: [2,10]
     })
     .slider("pips", {
-        rest: "label",
+      first: 'pip',
+      last: 'pip',
+        rest: "pips",
         step: 10
     })
     .slider("float");
