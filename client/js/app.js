@@ -105,7 +105,6 @@ g.append('text')
     return d.label;
   })
   .attr('transform',function(d, i){
-    console.log(w);
     if (i === 0){
       return 'translate(' + (parseFloat(d.xPosition)*w + 14) + ',' + ((h) - 22) + ')';
     } else if (i === 1 ) {
@@ -122,7 +121,6 @@ g.append('text')
     return d.label2;
   })
   .attr('transform',function(d, i){
-    console.log(w);
     if (i === 0){
       return 'translate(' + (parseFloat(d.xPosition)*w + 13) + ',' + ((h) - 2) + ')';
     } else if (i === 1 ) {
@@ -247,6 +245,7 @@ function drawGlobe(svg, world){
 // Collects information from search parameters and triggers renderGlobe()
 function bindSubmitButton() {
   $('#submitButton').on('click', function(){
+    $('#loading-div').css('display', 'block');
     var startTime = $('#from').val();
     var endTime = $('#to').val();
     var slider = document.getElementById('magSlider');
@@ -269,6 +268,10 @@ function bindSubmitButton() {
       });
     }
   });
+}
+
+function hideLoadingDiv(){
+  $('#loading-div').css('display', 'none');
 }
 
 // Defines behavior of time lapse buttons
@@ -399,11 +402,21 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
   // Sets up D3 api call using parameters from search inputs
   queue()
   // .defer(d3.json, "/js/world2.json")
-  .defer(d3.json, "http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=" + startTime + "&endtime=" + endTime + "&minmagnitude=" + minmag + "&maxmagnitude=" + maxmag)
+  .defer(function(f){
+    d3.json("http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=" + startTime + "&endtime=" + endTime + "&minmagnitude=" + minmag + "&maxmagnitude=" + maxmag)
+      // .on('progress', function(){
+      //   $('#loading-div').css('display', 'block');
+      // })
+      .get(function(error, data){
+        $('#loading-div').css('display', 'none');
+        $('#quakeSummary').css('display', 'block');
+        $('#gradient-div').css('display', 'block');
+        f(error, data);
+      });
+    })
   .await(ready);
 
   function ready(error, quakes) {
-
     if (error) throw error;
 
     quakes = quakes.features;
@@ -417,7 +430,7 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
 
           // Min/max properties correspond to the values of the start and end dates in milliseconds
           min: new Date(startTime).valueOf(),
-          max: new Date(endTime).valueOf(),
+          max: new Date(endTime).valueOf() + 86400000,
 
           // Defines behaviors when slider is manipulated
           slide: drawQuakes,
@@ -570,8 +583,6 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
         ;
         svg.selectAll('.point').data(places).exit().remove();
 
-      $('#quakeSummary').css('display', 'block');
-      $('#gradient-div').css('display', 'block');
 
   // var circleLines = setInterval(function() {
   //
@@ -601,6 +612,8 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
     // }
   }
 
+
+
 window.onload = function(){
 
   bindSubmitButton();
@@ -626,7 +639,10 @@ window.onload = function(){
         var d = new Date(selectedDate);
         var t = d.valueOf() + 2678400000;
         var maxDate = new Date(t);
-        $( "#to" ).datepicker( "option", "maxDate", new Date(Math.min.apply(null, [new Date(), maxDate])));
+        var today = new Date().valueOf();
+        var tomorrow = today + 86400000;
+        var tomorrowDate = new Date(tomorrow);
+        $( "#to" ).datepicker( "option", "maxDate", new Date(Math.min.apply(null, [tomorrow, maxDate])));
       }
     });
 
@@ -688,15 +704,46 @@ window.onload = function(){
   queue()
   .defer(d3.json, "/js/world2.json")
   .defer(d3.json, '/js/tectonics.json')
+  .defer(d3.xml, 'http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.atom')
   .await(render);
 
-  function render(error, world, tectonics){
+  function render(error, world, tectonics, xml){
     drawGlobe(svg, world);
 
     svg.insert("path", ".graticule")
         .datum(topojson.object(tectonics, tectonics.objects.tec))
         .attr("class", "tectonic")
         .attr("d", path);
+
+    var entries = d3.select(xml).selectAll("entry")[0];
+    var ul = d3.select("#presentation").append("ul").attr("class","quakeslist");
+
+    var header = ul.append("h4").html(xml.getElementsByTagName("title")[0].textContent + "<br/><span id='updated'>Updated:" + new Date(xml.getElementsByTagName("updated")[0].textContent)).toString() + '<span>';
+
+    var li = ul.selectAll('li')
+        .data(entries)
+        .enter().append('li')
+        .style('list-style-type', 'none')
+        .style('font-size', '0.8em')
+        .html(function(entry){
+          var cData = entry.getElementsByTagName('summary')[0].childNodes[0].nodeValue;
+          return '<span id="quakeTitle">' + entry.getElementsByTagName('title')[0].textContent + '</span><br/><br/>Time: ' + cData.match("Time</dt><dd>(.*UTC)")[1] + '<br/>Location: ' + cData.match("Location</dt><dd>(.*)</dd><dt>Depth")[1] + '<br/>Depth: ' + cData.match("Depth</dt><dd>(.*)</dd></dl>")[1];
+        });
+
+    setInterval(function(){
+      d3.xml('http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.atom', function(error, xml){
+        var entries = d3.select(xml).selectAll("entry")[0];
+        var li = ul.selectAll('li')
+            .data(entries)
+            .enter().append('li')
+            .style('list-style-type', 'none')
+            .style('font-size', '0.8em')
+            .html(function(entry){
+              var cData = entry.getElementsByTagName('summary')[0].childNodes[0].nodeValue;
+              return '<span id="quakeTitle">' + entry.getElementsByTagName('title')[0].textContent + '</span><br/><br/>Time: ' + cData.match("Time</dt><dd>(.*UTC)")[1] + '<br/>Location: ' + cData.match("Location</dt><dd>(.*)</dd><dt>Depth")[1] + '<br/>Depth: ' + cData.match("Depth</dt><dd>(.*)</dd></dl>")[1];
+            });
+      });
+    }, 300000 );
   }
 //   d3.json("/js/world2.json", function(err, world){
 //     drawGlobe(svg, world);

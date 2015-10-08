@@ -12,6 +12,48 @@ body {
   text-align: right;
 }
 
+#loading-div {
+  display:none;
+  position: absolute;
+  bottom: 10%;
+  left:34%;
+}
+
+#presentation {
+  position: absolute;
+  right:3%;
+  bottom: 10%;
+  width: 300px;
+  max-height: 300px;
+  overflow:scroll;
+  border:1px solid white;
+  border-radius: 10px;
+}
+
+ul {
+  margin:0;
+  padding:0;
+  padding-top: 5%;
+  text-align: center;
+  /*background: rgb(233, 236, 221);*/
+}
+
+li {
+  border-top: 1px solid white;
+  margin-bottom: 10px;
+  padding-top: 10px;
+}
+
+#quakeTitle {
+  font-size: 1.2em;
+}
+
+#loadingImage {
+  width:520px;
+  height: 520px;
+  border-radius: 50%;
+  border: 8px solid white;
+}
 
 .tectonic {
   fill: none;
@@ -34,6 +76,11 @@ body {
 h1 {
   font-family: "Earthquake";
   font-size: 2em;
+}
+
+h4 {
+  margin:0;
+  margin-bottom: 5%;
 }
 
 #quakeSummaryText {
@@ -91,6 +138,10 @@ h1 {
   right: 4%;
   top: 6%;
   text-align: center;
+}
+
+#updated {
+  font-size: 0.7em;
 }
 
 #daterange{
