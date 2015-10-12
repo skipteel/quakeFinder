@@ -398,6 +398,36 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
     rotateGlobe();
   }
 
+function initializeSlider (quakes){
+
+  var startTime = $('#daterange').attr('data-start');
+  var endTime = $('#daterange').attr('data-end');
+
+  // Defines properties of time lapse slider
+  $("#timelapseSlider")
+    .slider({
+
+        // Min/max properties correspond to the values of the start and end dates in milliseconds
+        min: new Date(startTime).valueOf(),
+        max: new Date(endTime).valueOf() + 86400000,
+
+        // Defines behaviors when slider is manipulated
+        slide: drawQuakes,
+
+        // Defines behaviors when time lapse is initiated
+        change: drawQuakes,
+        animate: true
+    });
+  $('#timelapseDate').html(new Date($('#timelapseSlider').slider('value')).toUTCString().slice(0, 29));
+
+  var formatStartDate = startTime.slice(5,7) + '/' + startTime.slice(8,10) + '/' + startTime.slice(0,4);
+
+  var formatEndDate = endTime.slice(5,7) + '/' + endTime.slice(8,10) + '/' + endTime.slice(0,4);
+
+  var quakesNum = quakes.length;
+
+  $('#daterange>h4').html("Number of earthquakes,<br/>between " + minmag + " and " + maxmag + " magnitude,<br/>from " + formatStartDate + " to " + formatEndDate + ":<br/>" + quakesNum + '<br/><br/><span id="credit">Earthquake catalog courtesy of the U.S. Geological Survey</span>');
+}
 
   // Sets up D3 api call using parameters from search inputs
   queue()
@@ -417,43 +447,12 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
   .await(ready);
 
   function ready(error, quakes) {
+
     if (error) throw error;
 
     quakes = quakes.features;
 
-    var startTime = $('#daterange').attr('data-start');
-    var endTime = $('#daterange').attr('data-end');
-
-    // Defines properties of time lapse slider
-    $("#timelapseSlider")
-      .slider({
-
-          // Min/max properties correspond to the values of the start and end dates in milliseconds
-          min: new Date(startTime).valueOf(),
-          max: new Date(endTime).valueOf() + 86400000,
-
-          // Defines behaviors when slider is manipulated
-          slide: drawQuakes,
-
-          // Defines behaviors when time lapse is initiated
-          change: drawQuakes,
-          animate: true
-      });
-      // .slider("pips", {
-      //     rest: "label",
-      //     step: 10
-      // })
-      // .slider("float");
-
-    $('#timelapseDate').html(new Date($('#timelapseSlider').slider('value')).toUTCString().slice(0, 29));
-
-    var formatStartDate = startTime.slice(5,7) + '/' + startTime.slice(8,10) + '/' + startTime.slice(0,4);
-
-    var formatEndDate = endTime.slice(5,7) + '/' + endTime.slice(8,10) + '/' + endTime.slice(0,4);
-
-    var quakesNum = quakes.length;
-
-    $('#daterange>h4').html("Number of earthquakes,<br/>between " + minmag + " and " + maxmag + " magnitude,<br/>from " + formatStartDate + " to " + formatEndDate + ":<br/>" + quakesNum + '<br/><br/><span id="credit">Earthquake catalog courtesy of the U.S. Geological Survey</span>');
+    initializeSlider(quakes);
 
     // Generates quake data for point generation
     var places = [];
@@ -552,10 +551,6 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
 
         // Removes info box elements
         svg.selectAll('.textContainer').data([]).exit().remove();
-        // $(".externalObject").remove();
-        // $(".textContainer").remove();
-        // $(".textBox").remove();
-        // $(".textBoxTriangle").remove();
 
         // Stops pulse behavior
         clearInterval(pulse);
@@ -583,33 +578,8 @@ function renderGlobe(startTime, endTime, minmag, maxmag, svg) {
         ;
         svg.selectAll('.point').data(places).exit().remove();
 
-
-  // var circleLines = setInterval(function() {
-  //
-  //   svg.selectAll('.point').append("circle")
-  //       .attr("d", 0)
-  //       .style("stroke", function(d) {
-  //         return "rgb(222, 45, 38)"; // color( +d.geometry.coordinates[2] );
-  //       })
-  //       .style("stroke-width", 2)
-  //     .transition()
-  //       .ease("linear")
-  //       .duration(1000)
-  //       .attr("d", path.pointRadius(function(d) { return Math.pow(d.magnitude/2, 5); }))
-  //       .style("stroke-opacity", 0)
-  //       .style("stroke-width", 0)
-  //       .remove();
-  //
-  // }, 1000);
-
-
     }
 
-    // if (!rotate){
-    //   setTimeout(function(){
-    //   rotateGlobe();
-    //   },2000);
-    // }
   }
 
 
@@ -700,11 +670,11 @@ window.onload = function(){
               return spacePath(d);
           });
 
-  // Renders empty globe
+  // Renders globe with faultlines and recent quakes list
   queue()
   .defer(d3.json, "/js/world2.json")
   .defer(d3.json, '/js/tectonics.json')
-  .defer(d3.xml, 'http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.atom')
+  .defer(d3.xml, 'http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.atom')
   .await(render);
 
   function render(error, world, tectonics, xml){
@@ -730,9 +700,15 @@ window.onload = function(){
           return '<span id="quakeTitle">' + entry.getElementsByTagName('title')[0].textContent + '</span><br/><br/>Time: ' + cData.match("Time</dt><dd>(.*UTC)")[1] + '<br/>Location: ' + cData.match("Location</dt><dd>(.*)</dd><dt>Depth")[1] + '<br/>Depth: ' + cData.match("Depth</dt><dd>(.*)</dd></dl>")[1];
         });
 
+    // refreshes recent quakes list every five minutes
     setInterval(function(){
-      d3.xml('http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.atom', function(error, xml){
+      d3.xml('http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.atom', function(error, xml){
         var entries = d3.select(xml).selectAll("entry")[0];
+        d3.select("#presentation").select('ul').remove();
+        var ul = d3.select("#presentation").append("ul").attr("class","quakeslist");
+
+        var header = ul.append("h4").html(xml.getElementsByTagName("title")[0].textContent + "<br/><span id='updated'>Updated:" + new Date(xml.getElementsByTagName("updated")[0].textContent)).toString() + '<span>';
+
         var li = ul.selectAll('li')
             .data(entries)
             .enter().append('li')
@@ -742,6 +718,7 @@ window.onload = function(){
               var cData = entry.getElementsByTagName('summary')[0].childNodes[0].nodeValue;
               return '<span id="quakeTitle">' + entry.getElementsByTagName('title')[0].textContent + '</span><br/><br/>Time: ' + cData.match("Time</dt><dd>(.*UTC)")[1] + '<br/>Location: ' + cData.match("Location</dt><dd>(.*)</dd><dt>Depth")[1] + '<br/>Depth: ' + cData.match("Depth</dt><dd>(.*)</dd></dl>")[1];
             });
+          console.log('updated');
       });
     }, 300000 );
   }
