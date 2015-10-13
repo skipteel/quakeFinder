@@ -32,6 +32,18 @@
 
 ---
 
+- Version 1.1 provides a list of earthquakes that have occurred in the last day, parsed from the USGS XML feed, which is automatically updated every 5 minutes.
+
+<div style="text-align:center;">
+<img src="client/images/qq.png" width="100%">
+</div>
+
+---
+
+- Future versions will include additional statistical breakdowns of earthquakes by region and magnitude, will allow users to customize visualizations, and will provide more information on tectonic plates/boundaries and historical earthquakes.
+
+---
+
 #url
 
 http://quakequery.herokuapp.com/
@@ -43,6 +55,8 @@ http://quakequery.herokuapp.com/
 * Node.js
 * Express.js
 * D3.js
+
+---
 
 ##User Stories
 
