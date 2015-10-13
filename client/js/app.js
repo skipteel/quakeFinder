@@ -245,7 +245,6 @@ function drawGlobe(svg, world){
 // Collects information from search parameters and triggers renderGlobe()
 function bindSubmitButton() {
   $('#submitButton').on('click', function(){
-    $('#loading-div').css('display', 'block');
     var startTime = $('#from').val();
     var endTime = $('#to').val();
     var slider = document.getElementById('magSlider');
@@ -255,6 +254,7 @@ function bindSubmitButton() {
     if (startTime === "" || endTime === ""){
       $("#error-message").text("All fields are required");
     } else {
+      $('#loading-div').css('display', 'block');
       $("#error-message").text("");
       $('#daterange').attr('data-start', startTime);
       $('#daterange').attr('data-end', endTime);
