@@ -30,6 +30,20 @@
 <img src="client/images/quakeQuery.gif" width="100%">
 </div>
 
+---
+
+#url
+
+http://quakequery.herokuapp.com/
+
+---
+
+#Technologies
+
+* Node.js
+* Express.js
+* D3.js
+
 ##User Stories
 
 1. As a user, I want to be able to view a representation of the earth with tectonic plate boundaries, so that I can get a more realistic sense of the geography of earthquakes.
