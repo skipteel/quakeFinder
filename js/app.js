@@ -722,19 +722,7 @@ window.onload = function(){
       });
     }, 300000 );
   }
-//   d3.json("/js/world2.json", function(err, world){
-//     drawGlobe(svg, world);
-//   });
-//
-//   d3.json('/js/tectonics.json', function(err, data) {
-//
-//   svg.insert("path", ".graticule")
-//       .datum(topojson.object(data, data.objects.tec))
-//       .attr("class", "tectonic")
-//       .attr("d", path);
-//
-// });
-
+  
   // Defines behavior of magnitude slider
   $("#magSlider")
     .slider({
