@@ -7,7 +7,7 @@
 ---
 
 <div style="text-align:center;">
-<img src="client/images/quakeQuery2.png" width="100%">
+<img src="images/quakeQuery2.png" width="100%">
 </div>
 
 ---
@@ -17,7 +17,7 @@
 ---
 
 <div style="text-align:center;">
-<img src="client/images/quakeQueryInfo.png" width="100%">
+<img src="images/quakeQueryInfo.png" width="100%">
 </div>
 
 ---
@@ -27,7 +27,7 @@
 ---
 
 <div style="text-align:center;">
-<img src="client/images/quakeQuery.gif" width="100%">
+<img src="images/quakeQuery.gif" width="100%">
 </div>
 
 ---
@@ -35,7 +35,7 @@
 - Version 1.1 provides a list of earthquakes that have occurred in the last day, parsed from the USGS XML feed, which is automatically updated every 5 minutes.
 
 <div style="text-align:center;">
-<img src="client/images/qq.png" width="100%">
+<img src="images/qq.png" width="100%">
 </div>
 
 ---
