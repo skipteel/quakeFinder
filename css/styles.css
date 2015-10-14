@@ -1,0 +1,25 @@
+body {
+  /*background-color: lightblue;*/
+}
+
+/*
+p {
+  background-color: pink;
+  border: 0.1em solid lightgrey;
+  width:0px;
+  height: 1em;
+  padding: 0.5em;
+	margin: 0.5em;
+}*/
+.point:hover {
+  fill: blue;
+}
+#quake-info {
+  position: fixed;
+  left: 60%;
+  top: 30%;
+}
+.land {
+  fill: #999;
+  stroke-opacity: 1;
+}
