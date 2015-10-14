@@ -586,6 +586,7 @@ function initializeSlider (quakes){
 
 window.onload = function(){
 
+  $('#loading-div').css('display', 'block');
   bindSubmitButton();
   bindRotateToggleButton();
   bindTimeLapseButton();
@@ -674,7 +675,12 @@ window.onload = function(){
   queue()
   .defer(d3.json, "./data/world2.json")
   .defer(d3.json, './data/tectonics.json')
-  .defer(d3.xml, 'http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.atom')
+  .defer(function(f){
+    d3.xml('http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.atom')
+      .get(function(error, data){
+        $('#loading-div').css('display', 'none');
+      });
+    })
   .await(render);
 
   function render(error, world, tectonics, xml){
@@ -722,7 +728,7 @@ window.onload = function(){
       });
     }, 300000 );
   }
-  
+
   // Defines behavior of magnitude slider
   $("#magSlider")
     .slider({
