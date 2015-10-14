@@ -679,6 +679,7 @@ window.onload = function(){
     d3.xml('http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.atom')
       .get(function(error, data){
         $('#loading-div').css('display', 'none');
+        f(error, data);
       });
     })
   .await(render);
