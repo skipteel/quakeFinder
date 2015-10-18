@@ -1,7 +1,13 @@
 console.log('scripts loaded');
 
-var width = 1500,
-    height = 800;
+var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+var height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+
+// var width = $(window).width();
+// var height = $(window).height();
+
+// var width = 1500,
+//     height = 800;
 
 var svg;
 var proj;
@@ -188,6 +194,64 @@ function mouseup() {
   }
 }
 
+function resize() {
+    // adjust things when the window size changes
+    var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+    var height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+
+    // update projection
+
+    svg.selectAll('circle')
+        .attr('cx', width / 2)
+        .attr('cy', height / 2)
+        .attr('r', window.proj.scale())
+        .attr('class', 'globe')
+        // .attr("filter", "url(#glow)")
+        .attr("fill", "url(#gradBlue)");
+
+    var globe_highlight = svg.append("defs").append("radialGradient")
+         .attr("id", "globe_highlight")
+         .attr("cx", "75%")
+         .attr("cy", "25%");
+       globe_highlight.append("stop")
+         .attr("offset", "5%").attr("stop-color", "#ffd")
+         .attr("stop-opacity","0.6");
+       globe_highlight.append("stop")
+         .attr("offset", "100%").attr("stop-color", "#ba9")
+         .attr("stop-opacity","0.2");
+
+    svg.selectAll(".highlight")
+      .attr("cx", width / 2)
+      .attr("cy", height / 2)
+      .attr("r", window.proj.scale())
+      .attr("class","highlight noclicks")
+      .style("fill", "url(#globe_highlight)");
+
+    var globe_shading = svg.append("defs").append("radialGradient")
+         .attr("id", "globe_shading")
+         .attr("cx", "55%")
+         .attr("cy", "45%");
+       globe_shading.append("stop")
+         .attr("offset","30%").attr("stop-color", "#fff")
+         .attr("stop-opacity","0");
+       globe_shading.append("stop")
+         .attr("offset","100%").attr("stop-color", "#505962")
+         .attr("stop-opacity","0.3");
+
+    svg.selectAll(".shading")
+      .attr("cx", width / 2)
+      .attr("cy", height / 2)
+      .attr("r", window.proj.scale())
+      .attr("class","shading noclicks")
+      .style("fill", "url(#globe_shading)");
+
+      window.proj
+          .translate([width / 2, height / 2])
+          .scale(width/6);
+
+    refresh();
+}
+
 // Generates globe
 function drawGlobe(svg, world){
 
@@ -195,8 +259,8 @@ function drawGlobe(svg, world){
    .attr('cx', width / 2)
    .attr('cy', height / 2)
    .attr('r', window.proj.scale())
-   .attr('class', 'globe')
    .attr("filter", "url(#glow)")
+   .attr('class', 'globe')
    .attr("fill", "url(#gradBlue)");
 
   svg.append("path")
@@ -629,7 +693,8 @@ window.onload = function(){
 
   d3.select(window)
       .on("mousemove", mousemove)
-      .on("mouseup", mouseup);
+      .on("mouseup", mouseup)
+      .on('resize', resize);
 
   window.space = d3.geo.azimuthalEquidistant()
       .translate([width / 2, height / 2]);
@@ -643,7 +708,7 @@ window.onload = function(){
   window.proj = d3.geo.orthographic()
       .translate([width / 2, height / 2])
       .clipAngle(90)
-      .scale(260);
+      .scale(width/6);
 
   // window.sky = d3.geo.orthographic()
   //     .translate([width / 2, height / 2])
