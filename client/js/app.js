@@ -688,7 +688,7 @@ window.onload = function(){
     var entries = d3.select(xml).selectAll("entry")[0];
     var ul = d3.select("#presentation").append("ul").attr("class","quakeslist");
 
-    var header = ul.append("h4").html(xml.getElementsByTagName("title")[0].textContent + "<br/><span id='updated'>Updated:" + new Date(xml.getElementsByTagName("updated")[0].textContent).toString() + '<br/>Count: ' + entries.length + '</span>');
+    var header = ul.append("h4").html(xml.getElementsByTagName("title")[0].textContent + "<br/><span id='updated'>Updated:" + new Date(xml.getElementsByTagName("updated")[0].textContent)).toString() + '<span>';
 
     var li = ul.selectAll('li')
         .data(entries)
@@ -707,7 +707,7 @@ window.onload = function(){
         d3.select("#presentation").select('ul').remove();
         var ul = d3.select("#presentation").append("ul").attr("class","quakeslist");
 
-        var header = ul.append("h4").html(xml.getElementsByTagName("title")[0].textContent + "<br/><span id='updated'>Updated:" + new Date(xml.getElementsByTagName("updated")[0].textContent)).toString() + '</span>';
+        var header = ul.append("h4").html(xml.getElementsByTagName("title")[0].textContent + "<br/><span id='updated'>Updated:" + new Date(xml.getElementsByTagName("updated")[0].textContent)).toString() + '<span>';
 
         var li = ul.selectAll('li')
             .data(entries)
@@ -738,7 +738,7 @@ window.onload = function(){
   // Defines behavior of magnitude slider
   $("#magSlider")
     .slider({
-        min: 0,
+        min: 2,
         max: 10,
         step: 0.1,
         range: true,
