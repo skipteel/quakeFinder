@@ -10,7 +10,7 @@
   "author": "Skip Teel",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.13.3",
+    "express": "^4.17.3",
     "nodemon": "^1.7.1",
     "tzwhere": "^1.0.0"
   }
